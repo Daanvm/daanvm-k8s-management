@@ -35,7 +35,7 @@ jobs:
         run: |
           kubectl create namespace cert-manager --dry-run=client -o yaml | kubectl apply -f -
           helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.7.1 --set installCRDs=true
-          kubectl apply -f ./config/kubernetes/cert-manager-letsencrypt.yaml
+          kubectl apply -f cert-manager-letsencrypt.yaml
 
       - name: Create kubernetes ingress
         run: |
