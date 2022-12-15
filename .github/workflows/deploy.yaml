@@ -26,7 +26,11 @@ jobs:
         run: |
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo add jetstack https://charts.jetstack.io
+          helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
           helm repo update
+
+      - name: Install metrics-server with helm
+        run: helm upgrade --install metrics-server metrics-server/metrics-server
 
       - name: Install Nginx ingress with helm
         run: helm upgrade --install nginx-ingress ingress-nginx/ingress-nginx --set controller.publishService.enabled=true
