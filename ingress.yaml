@@ -4,16 +4,16 @@ kind: Ingress
 metadata:
   name: daanvm-nl-ingress
   annotations:
-    kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
       - daanvm.nl
       - www.daanvm.nl
 
-      - christelmusic.nl
-      - www.christelmusic.nl
+      # - christelmusic.nl
+      # - www.christelmusic.nl
 
       secretName: daanvm-nl-tls
 
@@ -31,15 +31,15 @@ spec:
     - host: "www.daanvm.nl"
       http: *daanvm_nl_http_rules
 
-    - host: "christelmusic.nl"
-      http: &christelmusic_nl_http_rules
-        paths:
-          - pathType: Prefix
-            path: "/"
-            backend:
-              service:
-                name: christelmusic-nl
-                port:
-                  number: 80
-    - host: "www.christelmusic.nl"
-      http: *christelmusic_nl_http_rules
+    # - host: "christelmusic.nl"
+    #   http: &christelmusic_nl_http_rules
+    #     paths:
+    #       - pathType: Prefix
+    #         path: "/"
+    #         backend:
+    #           service:
+    #             name: christelmusic-nl
+    #             port:
+    #               number: 80
+    # - host: "www.christelmusic.nl"
+    #   http: *christelmusic_nl_http_rules

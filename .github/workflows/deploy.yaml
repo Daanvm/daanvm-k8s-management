@@ -1,49 +1,58 @@
 on:
   push:
     branches:
-      - main
+      - transip
 
 jobs:
   install-ingress-and-cert-manager:
     name: Install the ingress and cert-manager resources
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v3
-
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-
-      - name: Save DigitalOcean kubeconfig with short-lived credentials
-        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 k8s-daanvm
-
-      - name: Install helm
-        uses: azure/setup-helm@v3
+      - name: Checkout this repo
+        uses: actions/checkout@v4
 
       - name: Set up helm
-        run: |
-          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-          helm repo add jetstack https://charts.jetstack.io
-          helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
-          helm repo update
+        uses: wahyd4/kubectl-helm-action@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.TRANSIP_KUBECONFIG_BASE64 }}
+        with:
+          args: |
+            helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+            helm repo add jetstack https://charts.jetstack.io
+            helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+            helm repo update
 
       - name: Install metrics-server with helm
-        run: helm upgrade --install metrics-server metrics-server/metrics-server
+        uses: wahyd4/kubectl-helm-action@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.TRANSIP_KUBECONFIG_BASE64 }}
+        with:
+          args: |
+            helm upgrade --install metrics-server metrics-server/metrics-server
 
       - name: Install Nginx ingress with helm
-        run: helm upgrade --install nginx-ingress ingress-nginx/ingress-nginx --set controller.publishService.enabled=true
+        uses: wahyd4/kubectl-helm-action@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.TRANSIP_KUBECONFIG_BASE64 }}
+        with:
+          args: |
+            helm upgrade --install nginx-ingress ingress-nginx/ingress-nginx --set controller.publishService.enabled=true
 
       - name: Install cert manager with helm
-        run: |
-          kubectl create namespace cert-manager --dry-run=client -o yaml | kubectl apply -f -
-          helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.7.1 --set installCRDs=true
-          kubectl apply -f cert-manager-letsencrypt.yaml
+        uses: wahyd4/kubectl-helm-action@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.TRANSIP_KUBECONFIG_BASE64 }}
+        with:
+          args: |
+            kubectl create namespace cert-manager --dry-run=client -o yaml | kubectl apply -f -
+            helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.7.1 --set installCRDs=true
+            kubectl apply -f cert-manager-letsencrypt.yaml
 
       - name: Create kubernetes ingress
-        run: |
-          kubectl apply -f ingress.yaml
-
-      - name: Get public loadbalancer IP address
-        run: kubectl get service nginx-ingress-ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[*].ip}'
+        uses: wahyd4/kubectl-helm-action@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.TRANSIP_KUBECONFIG_BASE64 }}
+        with:
+          args: |
+            kubectl apply -f ingress.yaml
+            kubectl get service nginx-ingress-ingress-nginx-controller -o=jsonpath='{.status.loadBalancer.ingress[*].hostname}'
