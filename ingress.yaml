@@ -15,6 +15,9 @@ spec:
       - christelmusic.nl
       - www.christelmusic.nl
 
+      - christelendaan.nl
+      - www.christelendaan.nl
+
       secretName: daanvm-nl-tls
 
   rules:
@@ -43,3 +46,16 @@ spec:
                   number: 80
     - host: "www.christelmusic.nl"
       http: *christelmusic_nl_http_rules
+
+    - host: "christelendaan.nl"
+      http: &christelendaan_nl_http_rules
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: christelendaan-nl
+                port:
+                  number: 80
+    - host: "www.christelendaan.nl"
+      http: *christelendaan_nl_http_rules
